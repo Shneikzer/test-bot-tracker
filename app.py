@@ -3,16 +3,37 @@ import os, time, json, requests, sys
 
 app = Flask(__name__)
 
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-FB_PIXEL_ID = os.getenv("FB_PIXEL_ID")
-FB_ACCESS_TOKEN = os.getenv("FB_ACCESS_TOKEN")
+# 🟢 MAP CANAUX → PIXELS
+# Mets ici tes vrais chat_id de canaux Telegram, et les pixels associés.
+# Pour chaque canal (clé = chat_id), tu peux mettre 1 ou plusieurs pixels.
+PIXEL_MAP = {
+    # EXEMPLES – À REMPLACER PAR TES VRAIES VALEURS
 
-def send_lead_to_facebook(user_id, first_name, channel_title):
-    if not FB_PIXEL_ID or not FB_ACCESS_TOKEN:
-        print("❌ FB_PIXEL_ID ou FB_ACCESS_TOKEN manquant. Vérifie tes variables d'environnement sur Render.")
-        return
+    # Canal Test : un seul pixel
+    -1003349861305: [
+        {
+            "pixel_id": "1515557479720413",
+            "token": "EAASWQPXDKG0BP8qQfIodKpPd3WPJVZCbkPdkv6BMoLmZCXj3tnZBawTOhuddMnqZBBN30eCRgeTCDHhwHaaZAx4xQds7JwRgYUq5gW67uF1QeTccCkGhAhNWtCljn5ZCuMY7z05rKwrBCjgghsMZAmF7cVKxfg9gB6C2gpicPoWvIIeKAvIQAZATOIt4NU7EPQZDZD"
+        }
+    ],
 
-    url = f"https://graph.facebook.com/v18.0/{FB_PIXEL_ID}/events"
+     # Canal The Elio's : un seul pixel
+    -1002308862086: [
+        {
+            "pixel_id": "1808434190556585",
+            "token": "EAAYixVMVkbgBP7qEQOEMgmdSVfw6EdBdkyGe76LLVqBfKbFXOJkqP8Rju5o2lZBLwFk9Sz3JvwS6Q9zoNPjWjBi74PvWP6Qy4IEHRZAlywoxuS6R0Iv88jFfDIzLWaGcSN0WjpmF4E8LUluT54VFjweFvLS2n5R1irAlfZAKghI0ZAGGXUOBZCNZBaosKWlAZDZD"
+        }
+    ],
+
+}
+
+# 🔐 On garde uniquement le token Telegram dans les variables d'env Render
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")  # utile juste pour vérifier plus tard si besoin
+
+
+def send_lead_to_one_pixel(user_id, first_name, channel_title, pixel_id, access_token):
+    """Envoie un event Lead à UN pixel Meta."""
+    url = f"https://graph.facebook.com/v18.0/{pixel_id}/events"
 
     payload = {
         "data": [{
@@ -21,21 +42,38 @@ def send_lead_to_facebook(user_id, first_name, channel_title):
             "action_source": "system_generated",
             "event_source_url": "https://t.me/" + (channel_title or "unknown"),
             "user_data": {
-                # Identifiant Telegram anonymisé côté Meta
-                "external_id": str(user_id)
+                "external_id": str(user_id)  # identifiant Telegram (hashable) côté Meta
             },
             "custom_data": {
                 "telegram_first_name": first_name,
                 "telegram_channel": channel_title
             }
         }],
-        "access_token": FB_ACCESS_TOKEN
+        "access_token": access_token
     }
 
     resp = requests.post(url, json=payload)
-    print(f"✅ Lead envoyé à Facebook pour {first_name} ({user_id}) depuis {channel_title}")
+    print(f"✅ Lead envoyé à Facebook pour {first_name} ({user_id}) sur pixel {pixel_id}")
     print(f"➡️ Réponse Meta: {resp.status_code} {resp.text}")
     sys.stdout.flush()
+
+
+def send_lead_to_all_pixels(user_id, first_name, channel_title, chat_id):
+    """Récupère tous les pixels liés à ce canal et envoie le Lead à chacun."""
+    pixels = PIXEL_MAP.get(chat_id, [])
+
+    if not pixels:
+        print(f"⚠️ Aucun pixel configuré pour ce canal (chat_id={chat_id}, title={channel_title})")
+        sys.stdout.flush()
+        return
+
+    for p in pixels:
+        pixel_id = p.get("pixel_id")
+        token = p.get("token")
+        if not pixel_id or not token:
+            print(f"❌ pixel_id ou token manquant pour chat_id={chat_id}")
+            continue
+        send_lead_to_one_pixel(user_id, first_name, channel_title, pixel_id, token)
 
 
 @app.route('/webhook', methods=['POST'])
@@ -48,18 +86,19 @@ def webhook():
         data = request.get_json(silent=True) or {}
         print("JSON parsé :", json.dumps(data, ensure_ascii=False))
 
-        # 🔹 Cas 1 : chat_join_request (canal privé avec approbation)
+        # 🔹 Cas : chat_join_request (canal privé avec approbation)
         if "chat_join_request" in data:
             cjr = data["chat_join_request"]
             chat = cjr.get("chat", {})
             user = cjr.get("from", {})
 
             channel_title = chat.get("title", "unknown")
+            chat_id = chat.get("id")
             user_id = user.get("id")
             first_name = user.get("first_name", "")
 
-            print(f"👉 Nouvelle demande de join sur {channel_title} par {first_name} ({user_id})")
-            send_lead_to_facebook(user_id, first_name, channel_title)
+            print(f"👉 Nouvelle demande de join sur {channel_title} ({chat_id}) par {first_name} ({user_id})")
+            send_lead_to_all_pixels(user_id, first_name, channel_title, chat_id)
 
         sys.stdout.flush()
     except Exception as e:
@@ -76,5 +115,3 @@ def home():
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)
-
-
