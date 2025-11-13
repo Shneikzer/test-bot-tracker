@@ -32,6 +32,14 @@ PIXEL_MAP = {
             "token": "EAAYixVMVkbgBP5M7BrzXGCrc4sDxuygifNMrooR9iti2f42qqhyftuio5HSYzCgnPhATkA8qG50IDZAqYOgF9mNUqBOIX3vLFoNk5HJvHs0QFFszE0ueBkhtkKMON9VZCGdEDXTfaMCV70ZACMIrxEzhUWlKlVizVpiGRDvuBS4ZCh8u1uHWwjgOgGGDMwZDZD"
         }
     ],
+
+     # Canal Anto UK : un seul pixel
+    -1002797992543: [
+        {
+            "pixel_id": "2937051599829997",
+            "token": "EAATHiAwgz70BP14c2RzcAtDf1GgVDsYxcdrkTrzvb58FOplxfUKFRJTIPCAOBZB5H9StwSIZCvzoto6LeECuFljuXG1V4s4KqL498NbEPKJZApLuR13spFfVYL3oZCGnoiYYZAt9YrNpizmdMUZAGG1hobqZCJCwTog0EDGTLtkkValQARUqwpIZBsxQsrpidwZDZD"
+        }
+    ],
 }
 
 # 🔐 On garde uniquement le token Telegram dans les variables d'env Render
