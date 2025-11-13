@@ -25,6 +25,13 @@ PIXEL_MAP = {
         }
     ],
 
+    # Canal Elio It : un seul pixel
+    -1002658549927: [
+        {
+            "pixel_id": "1025214086229391",
+            "token": "EAAYixVMVkbgBP5M7BrzXGCrc4sDxuygifNMrooR9iti2f42qqhyftuio5HSYzCgnPhATkA8qG50IDZAqYOgF9mNUqBOIX3vLFoNk5HJvHs0QFFszE0ueBkhtkKMON9VZCGdEDXTfaMCV70ZACMIrxEzhUWlKlVizVpiGRDvuBS4ZCh8u1uHWwjgOgGGDMwZDZD"
+        }
+    ],
 }
 
 # 🔐 On garde uniquement le token Telegram dans les variables d'env Render
