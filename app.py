@@ -50,13 +50,13 @@ def send_lead_to_one_pixel(user_id, first_name, channel_title, pixel_id, access_
     """Envoie un event Lead à UN pixel Meta."""
     url = f"https://graph.facebook.com/v18.0/{pixel_id}/events"
 
-     payload = {
+    payload = {
         "data": [{
             "event_name": "Lead",
             "event_time": int(time.time()),
             "action_source": "system_generated",
             "event_source_url": "https://t.me/" + (channel_title or "unknown"),
-            "event_id": "join_telegram",  # synchronisation navigateur <-> serveur
+            "event_id": "join_telegram",  # synchronisation browser <-> server
             "user_data": {
                 "external_id": str(user_id)
             },
@@ -68,8 +68,6 @@ def send_lead_to_one_pixel(user_id, first_name, channel_title, pixel_id, access_
         "access_token": access_token
     }
 
-
-
     resp = requests.post(url, json=payload)
     print(f"✅ Lead envoyé à Facebook pour {first_name} ({user_id}) sur pixel {pixel_id}")
     print(f"➡️ Réponse Meta: {resp.status_code} {resp.text}")
@@ -77,7 +75,7 @@ def send_lead_to_one_pixel(user_id, first_name, channel_title, pixel_id, access_
 
 
 def send_lead_to_all_pixels(user_id, first_name, channel_title, chat_id):
-    """Récupère tous les pixels liés à ce canal et envoie le Lead à chacun."""
+    """Envoie le Lead à tous les pixels associés à ce canal."""
     pixels = PIXEL_MAP.get(chat_id, [])
 
     if not pixels:
@@ -104,7 +102,7 @@ def webhook():
         data = request.get_json(silent=True) or {}
         print("JSON parsé :", json.dumps(data, ensure_ascii=False))
 
-        # 🔹 Cas : chat_join_request (canal privé avec approbation)
+        # Cas : demande pour rejoindre un canal privé
         if "chat_join_request" in data:
             cjr = data["chat_join_request"]
             chat = cjr.get("chat", {})
