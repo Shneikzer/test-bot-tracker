@@ -50,22 +50,24 @@ def send_lead_to_one_pixel(user_id, first_name, channel_title, pixel_id, access_
     """Envoie un event Lead à UN pixel Meta."""
     url = f"https://graph.facebook.com/v18.0/{pixel_id}/events"
 
-    payload = {
-        "data": [{
-            "event_name": "Lead",
-            "event_time": int(time.time()),
-            "action_source": "system_generated",
-            "event_source_url": "https://t.me/" + (channel_title or "unknown"),
-            "user_data": {
-                "external_id": str(user_id)  # identifiant Telegram (hashable) côté Meta
-            },
-            "custom_data": {
-                "telegram_first_name": first_name,
-                "telegram_channel": channel_title
-            }
-        }],
-        "access_token": access_token
-    }
+ payload = {
+    "data": [{
+        "event_name": "Lead",
+        "event_time": int(time.time()),
+        "action_source": "system_generated",
+        "event_source_url": "https://t.me/" + (channel_title or "unknown"),
+        "event_id": "join_telegram",  # ⭐ important pour l’attribution
+        "user_data": {
+            "external_id": str(user_id)
+        },
+        "custom_data": {
+            "telegram_first_name": first_name,
+            "telegram_channel": channel_title
+        }
+    }],
+    "access_token": access_token
+}
+
 
     resp = requests.post(url, json=payload)
     print(f"✅ Lead envoyé à Facebook pour {first_name} ({user_id}) sur pixel {pixel_id}")
